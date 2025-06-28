@@ -10,7 +10,7 @@ output "security_group_ids" {
   value = var.security_group_ids
 }
 
-output "oracle_linux_ami_id" {
-  value = local.final_ami_id
-}
 
+output "oracle_linux_ami_id" {
+  value = data.aws_ami.oracle_linux.id
+}

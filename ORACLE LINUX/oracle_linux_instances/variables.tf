@@ -17,9 +17,6 @@ variable "additional_ebs_volumes" {
   default = []
 }
 
-variable "iam_instance_profile_name" {
-  type = string
-}
 variable "key_name" {
   description = "The name of the AWS EC2 Key Pair to allow SSH access"
   type        = string
@@ -151,8 +148,4 @@ variable "name_prefix" {
   description = "Prefix for instance name and tags"
 }
 
-variable "instance_policy_json" {
-  type        = string
-  description = "IAM policy in JSON format"
-}
 

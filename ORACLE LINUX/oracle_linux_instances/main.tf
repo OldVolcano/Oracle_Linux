@@ -30,7 +30,7 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
 # EC2 Instances
 resource "aws_instance" "oracle_linux_instances" {
   count                = length(var.subnet_ids)
-  ami                  = local.final_ami_id
+  ami = data.aws_ami.oracle_linux.id
   instance_type        = var.instance_type
   key_name             = var.key_name
   subnet_id            = var.subnet_ids[count.index]
