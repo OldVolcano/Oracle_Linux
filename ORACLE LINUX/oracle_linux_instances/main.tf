@@ -1,10 +1,41 @@
+# IAM Role and Instance Profile Setup
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "ec2_role" {
+  name               = "${var.name_prefix}-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+  description        = "IAM role for EC2 instance ${var.name_prefix}"
+  tags               = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_ssm" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "${var.name_prefix}-instance-profile"
+  role = aws_iam_role.ec2_role.name
+}
+
+# EC2 Instances
 resource "aws_instance" "oracle_linux_instances" {
   count                = length(var.subnet_ids)
-  ami                  = data.aws_ami.oracle_linux.id
+  ami                  = local.final_ami_id
   instance_type        = var.instance_type
+  key_name             = var.key_name
   subnet_id            = var.subnet_ids[count.index]
   source_dest_check    = var.source_dest_check
-  iam_instance_profile = module.instance_role.iam_instance_profile_name
+  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
 
   metadata_options {
     http_endpoint          = "enabled"
@@ -53,11 +84,4 @@ resource "aws_instance" "oracle_linux_instances" {
     custom_user_data   = var.custom_user_data
     service_proxy_host = var.service_proxy_host
   })
-}
-
-module "instance_role" {
-  source          = "git@github.com:nike/terraform-modules//aws_iam_instance_profile?ref=rel/aws_iam_instance_profile/1.1.0"
-  name            = var.name_prefix
-  description     = "ec2 instance profile for ${var.name_prefix} instances"
-  iam_policy_json = var.instance_policy_json
 }
